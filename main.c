@@ -1,16 +1,14 @@
+#include <stdio.h>
 #include <sys/stat.h>
 #include <raylib.h>
 #include <raymath.h>
 #include <sys/types.h>
 
 #define RAY_LEN 0.5f
-#define RAY_STEP 0.01f
-#define NUM_STEPS 50
+#define STEP_LEN 0.01f
 #define FOV 90
 #define ROT_SPEED 120
 #define MOVE_SPEED 0.1f
-#define FLOOR_Z 0.1f
-#define CEIL_Z -0.1f
 
 static Vector2 pos;
 static float rot;
@@ -19,7 +17,7 @@ static int map_size;
 
 
 int cmp_color(Color a, Color b) {
-  return !(a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a);
+  return (a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a);
 }
 
 
@@ -45,29 +43,6 @@ Color get_map_color(Vector2 p) {
 }
 
 
-
-Color cast_ray (float angle_h, float angle_v) {
-  float ah = rot + angle_h;
-  float av = angle_v;
-  Vector3 dir = Vector3RotateByAxisAngle((Vector3){1.0f, 0.0f, 0.0f}, (Vector3){0.0f, -1.0f, 0.0f}, av);
-  dir = Vector3RotateByAxisAngle(dir, (Vector3){0.0f, 0.0f, 1.0f}, ah);
-  Vector3 ray_pos;
-  for (float f = 0.0f; f < RAY_LEN; f += RAY_STEP) {
-    ray_pos = Vector3Add((Vector3){pos.x, pos.y, 0}, Vector3Scale(dir, f));
-
-    Color result;
-    if (ray_pos.z > FLOOR_Z || ray_pos.z < CEIL_Z) result = BROWN;
-    else result = get_map_color((Vector2){ray_pos.x, ray_pos.y});
-
-    if (cmp_color(result, BLACK))  {
-      return fade_color(result, f / RAY_LEN);
-    }
-  }
-  return BLACK;
-}
-
-
-
 int main (void) {
   InitWindow(800, 600, "Raycasting");
 
@@ -75,10 +50,7 @@ int main (void) {
   map = LoadImage("maps/map.png");
   map_size = map.width;
 
-  Image out = GenImageColor(160, 120, BLACK);
-  Texture2D bg_tex = LoadTextureFromImage(out);
-
-  pos = (Vector2){0.05f, 0.05f};
+  pos = (Vector2){0.15f, 0.05f};
   rot = 0.0f;
 
   // Main loop
@@ -92,37 +64,46 @@ int main (void) {
     vel.y = (float)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A));
     bool sprinting = IsKeyDown(KEY_W) && IsKeyDown(KEY_LEFT_SHIFT);
     vel = Vector2Rotate(Vector2Scale(Vector2Normalize(vel), MOVE_SPEED * (1.0f + sprinting) * delta), rot);
+
     Vector2 new_pos = Vector2Add(pos, vel);
-    if (!cmp_color(get_map_color(new_pos), BLACK)) {
+    if (cmp_color(get_map_color(new_pos), BLACK)) {
       pos = new_pos;
       if (pos.x < 0) pos.x += 1;
       else if (pos.x > 1) pos.x -= 1;
       if (pos.y < 0) pos.y += 1;
       else if (pos.y > 1) pos.y -= 1;
     }
-    
-    for (int y = 0; y < 120; y++){
-      for (int x = 0; x < 160; x++) {
-        float ray_angle_h = ((float)x / 160 - 0.5) * FOV * DEG2RAD;
-        float ray_angle_v = ((float)y / 120 - 0.5) * ((float)120 / 160 * FOV) * DEG2RAD;
-        Color col = cast_ray(ray_angle_h, ray_angle_v);
-        ImageDrawPixel(&out, x, y, col);
-      }
-    }
-
-    UnloadTexture(bg_tex);
-    bg_tex = LoadTextureFromImage(out);
 
     BeginDrawing();
 
-    DrawTextureEx(bg_tex, (Vector2){0, 0}, 0, 5, WHITE);
+    ClearBackground(BROWN);
+    
+    for (int x = 0; x < GetScreenWidth(); x++) {
+      float ray_angle = ((float)x / GetScreenWidth() - 0.5) * FOV * DEG2RAD + rot;
+      Vector2 ray_step = Vector2Rotate((Vector2){STEP_LEN, 0}, ray_angle);
+      Vector2 ray_pos = pos;
+
+      for (float f = 0.0f; f < RAY_LEN; f += STEP_LEN) {
+        ray_pos = Vector2Add(ray_pos, ray_step);
+
+        Color col_color = get_map_color((Vector2){ray_pos.x, ray_pos.y});
+
+        if (!cmp_color(col_color, BLACK))  {
+          int col_height = GetScreenHeight() * (1 - f / RAY_LEN);
+          int col_start = (GetScreenHeight() - col_height) * 0.5;
+          col_color = fade_color(col_color, f / RAY_LEN);
+
+          DrawLine(x, col_start, x, col_start + col_height, col_color);
+          break;
+        }
+      }
+    }
 
     EndDrawing();
   }
   
   // Unload resources
   UnloadImage(map);
-  UnloadTexture(bg_tex);
 
   CloseWindow();
 }
