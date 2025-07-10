@@ -1,8 +1,7 @@
 #include <stdio.h>
-#include <sys/stat.h>
+#include <math.h>
 #include <raylib.h>
 #include <raymath.h>
-#include <sys/types.h>
 
 #define RAY_LEN 0.5f
 #define STEP_LEN 0.01f
@@ -14,21 +13,6 @@ static Vector2 pos;
 static float rot;
 static Image map;
 static int map_size;
-
-
-int cmp_color(Color a, Color b) {
-  return (a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a);
-}
-
-
-Color fade_color(Color c, float f) {
-  Color result = {0};
-  result.r = (u_char)Lerp(c.r, 0, f);
-  result.g = (u_char)Lerp(c.g, 0, f);
-  result.b = (u_char)Lerp(c.b, 0, f);
-  result.a = 255;
-  return result;
-}
 
 
 Color get_map_color(Vector2 p) {
@@ -66,7 +50,7 @@ int main (void) {
     vel = Vector2Rotate(Vector2Scale(Vector2Normalize(vel), MOVE_SPEED * (1.0f + sprinting) * delta), rot);
 
     Vector2 new_pos = Vector2Add(pos, vel);
-    if (cmp_color(get_map_color(new_pos), BLACK)) {
+    if (ColorIsEqual(get_map_color(new_pos), BLACK)) {
       pos = new_pos;
       if (pos.x < 0) pos.x += 1;
       else if (pos.x > 1) pos.x -= 1;
@@ -88,10 +72,10 @@ int main (void) {
 
         Color col_color = get_map_color((Vector2){ray_pos.x, ray_pos.y});
 
-        if (!cmp_color(col_color, BLACK))  {
+        if (!ColorIsEqual(col_color, BLACK))  {
           int col_height = GetScreenHeight() * (1 - f / RAY_LEN);
           int col_start = (GetScreenHeight() - col_height) * 0.5;
-          col_color = fade_color(col_color, f / RAY_LEN);
+          col_color = ColorLerp(col_color, BLACK, f / RAY_LEN);
 
           DrawLine(x, col_start, x, col_start + col_height, col_color);
           break;
