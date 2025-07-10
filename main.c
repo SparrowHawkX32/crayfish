@@ -3,11 +3,13 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#define RAY_LEN 0.5f
+#define RAY_LEN 0.2f
 #define STEP_LEN 0.01f
 #define FOV 90
 #define ROT_SPEED 120
 #define MOVE_SPEED 0.1f
+#define RENDER_X 80
+#define RENDER_Y 60
 
 static Vector2 pos;
 static float rot;
@@ -34,14 +36,15 @@ int main (void) {
   map = LoadImage("maps/map.png");
   map_size = map.width;
   Image bg = GenImageColor(RENDER_X, RENDER_Y, BLACK);
+  RenderTexture target = LoadRenderTexture(RENDER_X, RENDER_Y);
 
   pos = (Vector2){0.15f, 0.05f};
   rot = 0.0f;
 
   // Generate background depth effect
-  for (int i = 0; i < GetScreenHeight(); i++) {
-    Color row_color = ColorLerp(BROWN, BLACK, 1 - fabsf(GetScreenHeight() * 0.5f - i) / GetScreenHeight() * 2);
-    ImageDrawLine(&bg, 0, i, GetScreenWidth(), i, row_color);
+  for (int i = 0; i < RENDER_Y; i++) {
+    Color row_color = ColorLerp(BROWN, BLACK, 1 - fabsf(RENDER_Y * 0.5f - i) / RENDER_Y * 2);
+    ImageDrawLine(&bg, 0, i, RENDER_X, i, row_color);
   }
   Texture bg_tex = LoadTextureFromImage(bg);
 
@@ -66,12 +69,12 @@ int main (void) {
       else if (pos.y > 1) pos.y -= 1;
     }
 
-    BeginDrawing();
+    BeginTextureMode(target);
 
     DrawTexture(bg_tex, 0, 0, WHITE);
     
-    for (int x = 0; x < GetScreenWidth(); x++) {
-      float ray_angle = ((float)x / GetScreenWidth() - 0.5) * FOV * DEG2RAD + rot;
+    for (int x = 0; x < RENDER_X; x++) {
+      float ray_angle = ((float)x / RENDER_X - 0.5) * FOV * DEG2RAD + rot;
       Vector2 ray_step = Vector2Rotate((Vector2){STEP_LEN, 0}, ray_angle);
       Vector2 ray_pos = pos;
 
@@ -81,8 +84,8 @@ int main (void) {
         Color col_color = get_map_color((Vector2){ray_pos.x, ray_pos.y});
 
         if (!ColorIsEqual(col_color, BLACK))  {
-          int col_height = GetScreenHeight() * (1 - f / RAY_LEN);
-          int col_start = (GetScreenHeight() - col_height) * 0.5;
+          int col_height = RENDER_Y * (1 - f / RAY_LEN);
+          int col_start = (RENDER_Y - col_height) * 0.5;
           col_color = ColorLerp(col_color, BLACK, f / RAY_LEN);
 
           DrawLine(x, col_start, x, col_start + col_height, col_color);
@@ -91,10 +94,16 @@ int main (void) {
       }
     }
 
+    EndTextureMode();
+
+
+    BeginDrawing();
+    DrawTextureEx(target.texture, (Vector2){0}, 0, (float)GetScreenWidth() / RENDER_X, WHITE);
     EndDrawing();
   }
   
   // Unload resources
+  UnloadRenderTexture(target);
   UnloadTexture(bg_tex);
   UnloadImage(bg);
   UnloadImage(map);
