@@ -33,9 +33,17 @@ int main (void) {
   // Init variables
   map = LoadImage("maps/map.png");
   map_size = map.width;
+  Image bg = GenImageColor(RENDER_X, RENDER_Y, BLACK);
 
   pos = (Vector2){0.15f, 0.05f};
   rot = 0.0f;
+
+  // Generate background depth effect
+  for (int i = 0; i < GetScreenHeight(); i++) {
+    Color row_color = ColorLerp(BROWN, BLACK, 1 - fabsf(GetScreenHeight() * 0.5f - i) / GetScreenHeight() * 2);
+    ImageDrawLine(&bg, 0, i, GetScreenWidth(), i, row_color);
+  }
+  Texture bg_tex = LoadTextureFromImage(bg);
 
   // Main loop
   while (!WindowShouldClose()) {
@@ -60,7 +68,7 @@ int main (void) {
 
     BeginDrawing();
 
-    ClearBackground(BROWN);
+    DrawTexture(bg_tex, 0, 0, WHITE);
     
     for (int x = 0; x < GetScreenWidth(); x++) {
       float ray_angle = ((float)x / GetScreenWidth() - 0.5) * FOV * DEG2RAD + rot;
@@ -87,6 +95,8 @@ int main (void) {
   }
   
   // Unload resources
+  UnloadTexture(bg_tex);
+  UnloadImage(bg);
   UnloadImage(map);
 
   CloseWindow();
