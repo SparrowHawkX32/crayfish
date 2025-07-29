@@ -3,29 +3,22 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#define RAY_LEN 0.2f
-#define STEP_LEN 0.01f
+#define RAY_LEN 2.0f
+#define STEP_LEN 0.1f
 #define FOV 90
 #define ROT_SPEED 120
-#define MOVE_SPEED 0.1f
+#define MOVE_SPEED 1.0f
 #define RENDER_X 80
 #define RENDER_Y 60
 
-static Vector2 pos;
-static float rot;
-static Image map;
-static int map_size;
 
-
-Color get_map_color(Vector2 p) {
-  if (p.x < 0) p.x += 1;
-  else if (p.x > 1) p.x -= 1;
-  if (p.y < 0) p.y += 1;
-  else if (p.y > 1) p.y -= 1;
-  p = Vector2Scale(p, map_size);
-  int x = (int)p.x >= map_size ? (int)p.x - 1 : (int)p.x;
-  int y = (int)p.y >= map_size ? (int)p.y - 1 : (int)p.y;
-  return GetImageColor(map, x, y);
+float wrap_geq(float f, float min, float max) {
+  while (true) {
+    if (f < min) f += max;
+    else if (f >= max) f -= max;
+    else break;
+  }
+  return f;
 }
 
 
@@ -33,13 +26,13 @@ int main (void) {
   InitWindow(800, 600, "Raycasting");
 
   // Init variables
-  map = LoadImage("maps/map.png");
-  map_size = map.width;
+  Image map = LoadImage("maps/map.png");
   Image bg = GenImageColor(RENDER_X, RENDER_Y, BLACK);
   RenderTexture target = LoadRenderTexture(RENDER_X, RENDER_Y);
 
-  pos = (Vector2){0.15f, 0.05f};
-  rot = 0.0f;
+  Vector2 pos = (Vector2){1.5f, 0.5f};
+  //Vector2 pos = (Vector2){0.0f, 10.0f};
+  float rot = 0.0f;
 
   // Generate background depth effect
   for (int i = 0; i < RENDER_Y; i++) {
@@ -60,13 +53,12 @@ int main (void) {
     bool sprinting = IsKeyDown(KEY_W) && IsKeyDown(KEY_LEFT_SHIFT);
     vel = Vector2Rotate(Vector2Scale(Vector2Normalize(vel), MOVE_SPEED * (1.0f + sprinting) * delta), rot);
 
+    // Apply velcoity
     Vector2 new_pos = Vector2Add(pos, vel);
-    if (ColorIsEqual(get_map_color(new_pos), BLACK)) {
+    new_pos.x = wrap_geq(new_pos.x, 0, map.width);
+    new_pos.y = wrap_geq(new_pos.y, 0, map.height);
+    if (ColorIsEqual(GetImageColor(map, floorf(new_pos.x), floorf(new_pos.y)), BLACK)) {
       pos = new_pos;
-      if (pos.x < 0) pos.x += 1;
-      else if (pos.x > 1) pos.x -= 1;
-      if (pos.y < 0) pos.y += 1;
-      else if (pos.y > 1) pos.y -= 1;
     }
 
     BeginTextureMode(target);
@@ -81,7 +73,9 @@ int main (void) {
       for (float f = 0.0f; f < RAY_LEN; f += STEP_LEN) {
         ray_pos = Vector2Add(ray_pos, ray_step);
 
-        Color col_color = get_map_color((Vector2){ray_pos.x, ray_pos.y});
+        float cell_x = wrap_geq(ray_pos.x, 0, map.width);
+        float cell_y = wrap_geq(ray_pos.y, 0, map.height);
+        Color col_color = GetImageColor(map, floorf(cell_x), floorf(cell_y));
 
         if (!ColorIsEqual(col_color, BLACK))  {
           int col_height = RENDER_Y * (1 - f / RAY_LEN);
@@ -95,7 +89,6 @@ int main (void) {
     }
 
     EndTextureMode();
-
 
     BeginDrawing();
     DrawTextureEx(target.texture, (Vector2){0}, 0, (float)GetScreenWidth() / RENDER_X, WHITE);
