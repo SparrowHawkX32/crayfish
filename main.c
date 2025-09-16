@@ -3,7 +3,8 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#define MAX_RAY_LEN 5.0f
+#define RENDER_DIST 5.0f
+#define FOCAL_LEN 2.0f
 #define FOV 90
 #define ROT_SPEED 120
 #define MOVE_SPEED 1.0f
@@ -117,8 +118,8 @@ int main (void) {
         }
 
         col_color = GetImageColor(map, wrap_geq(grid_x, 0, map.width), wrap_geq(grid_y, 0, map.height));
-        if ((hit_side == 0 && prev_dist_x >= MAX_RAY_LEN) || 
-            (hit_side == 1 && prev_dist_y >= MAX_RAY_LEN)) break;
+        if ((hit_side == 0 && prev_dist_x >= RENDER_DIST) || 
+            (hit_side == 1 && prev_dist_y >= RENDER_DIST)) break;
         if (!ColorIsEqual(col_color, BLACK)) hit = true;
       }
 
@@ -132,9 +133,11 @@ int main (void) {
         ray_len = dist_y - hyp_dist_y;
       }
 
-      int col_height = roundf(RENDER_Y * (1 - ray_len / MAX_RAY_LEN));
+      if (ray_len > FOCAL_LEN) continue;
+
+      int col_height = roundf(RENDER_Y * (1 - ray_len / FOCAL_LEN));
       int col_start = roundf((RENDER_Y - col_height) * 0.5f);
-      col_color = ColorLerp(col_color, BLACK, ray_len / MAX_RAY_LEN);
+      col_color = ColorLerp(col_color, BLACK, ray_len / RENDER_DIST);
 
       DrawLine(x, col_start, x, col_start + col_height, col_color);
     }
