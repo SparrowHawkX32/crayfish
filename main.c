@@ -3,12 +3,16 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#define MAX_RAY_LEN 2.0f
+#define MAX_RAY_LEN 5.0f
 #define FOV 90
 #define ROT_SPEED 120
 #define MOVE_SPEED 1.0f
 #define RENDER_X 80
 #define RENDER_Y 60
+
+typedef struct {
+  
+} RaycastInfo;
 
 
 float wrap_geq(float f, float min, float max) {
@@ -64,7 +68,7 @@ int main (void) {
 
     DrawTexture(bg_tex, 0, 0, WHITE);
     
-    for (int x = 0; x < RENDER_X; x++) {
+    for (int x = 0; x <= RENDER_X; x++) {
       float ray_angle = ((float)x / RENDER_X - 0.5) * FOV * DEG2RAD + rot;
       Vector2 ray_dir = Vector2Rotate((Vector2){1, 0}, ray_angle);
       bool x_first = fabsf(ray_dir.x) > fabsf(ray_dir.y);
@@ -77,6 +81,7 @@ int main (void) {
       float hyp_dist_y = fabsf(1 / ray_dir.y);
       float dist_x;
       float dist_y;
+      bool hit = false;
       int hit_side = 0;
       Color col_color = BLACK;
 
@@ -97,7 +102,9 @@ int main (void) {
         dist_y = (pos.y - grid_y) * hyp_dist_y;
       }
   
-      while (true) {
+      while (hit == false) {
+        float prev_dist_x = dist_x;
+        float prev_dist_y = dist_y;
         if (dist_x < dist_y) {
           dist_x += hyp_dist_x;
           grid_x += step_x;
@@ -110,10 +117,12 @@ int main (void) {
         }
 
         col_color = GetImageColor(map, wrap_geq(grid_x, 0, map.width), wrap_geq(grid_y, 0, map.height));
-        if (!ColorIsEqual(col_color, BLACK) || fminf(dist_x, dist_y) >= MAX_RAY_LEN) break; // ERROR WITH LENGTH CHECK
+        if ((hit_side == 0 && prev_dist_x >= MAX_RAY_LEN) || 
+            (hit_side == 1 && prev_dist_y >= MAX_RAY_LEN)) break;
+        if (!ColorIsEqual(col_color, BLACK)) hit = true;
       }
 
-      if (ColorIsEqual(col_color, BLACK)) continue;
+      if (!hit) continue; // ignore rays out of range
       
       float ray_len;
       if (hit_side == 0) {
@@ -123,8 +132,8 @@ int main (void) {
         ray_len = dist_y - hyp_dist_y;
       }
 
-      int col_height = RENDER_Y * (1 - ray_len / MAX_RAY_LEN);
-      int col_start = (RENDER_Y - col_height) * 0.5;
+      int col_height = roundf(RENDER_Y * (1 - ray_len / MAX_RAY_LEN));
+      int col_start = roundf((RENDER_Y - col_height) * 0.5f);
       col_color = ColorLerp(col_color, BLACK, ray_len / MAX_RAY_LEN);
 
       DrawLine(x, col_start, x, col_start + col_height, col_color);
