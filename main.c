@@ -112,6 +112,8 @@ int main (void) {
         col_color = GetImageColor(map, wrap_geq(grid_x, 0, map.width), wrap_geq(grid_y, 0, map.height));
         if (!ColorIsEqual(col_color, BLACK) || fminf(dist_x, dist_y) >= MAX_RAY_LEN) break; // ERROR WITH LENGTH CHECK
       }
+
+      if (ColorIsEqual(col_color, BLACK)) continue;
       
       float ray_len;
       if (hit_side == 0) {
