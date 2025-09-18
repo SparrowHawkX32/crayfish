@@ -3,8 +3,8 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#define RENDER_DIST 5.0f
-#define FOCAL_LEN 2.0f
+#define RENDER_DIST 2.5f
+#define FOCAL_LEN 5.0f
 #define FOV 90
 #define ROT_SPEED 120
 #define MOVE_SPEED 1.0f
@@ -30,9 +30,10 @@ int main (void) {
   InitWindow(800, 600, "Raycasting");
 
   // Init variables
-  Image map = LoadImage("maps/map.png");
+  Image map = LoadImage("maps/map2.png");
   Image bg = GenImageColor(RENDER_X, RENDER_Y, BLACK);
   RenderTexture target = LoadRenderTexture(RENDER_X, RENDER_Y);
+  float pixel_fraction = 1.0f / RENDER_X;
 
   Vector2 pos = (Vector2){1.5f, 0.5f};
   //Vector2 pos = (Vector2){0.0f, 10.0f};
@@ -65,13 +66,15 @@ int main (void) {
       pos = new_pos;
     }
 
+    Vector2 forward = Vector2Rotate((Vector2){1, 0}, rot);
+    Vector2 right = Vector2Rotate((Vector2){0, 1}, rot);
+
     BeginTextureMode(target);
 
     DrawTexture(bg_tex, 0, 0, WHITE);
     
-    for (int x = 0; x <= RENDER_X; x++) {
-      float ray_angle = ((float)x / RENDER_X - 0.5) * FOV * DEG2RAD + rot;
-      Vector2 ray_dir = Vector2Rotate((Vector2){1, 0}, ray_angle);
+    for (int x = -RENDER_X * 0.5f; x <= RENDER_X * 0.5f; x++) {
+      Vector2 ray_dir = Vector2Add(forward, Vector2Scale(right, pixel_fraction * x));
       bool x_first = fabsf(ray_dir.x) > fabsf(ray_dir.y);
       float slope = fabsf(ray_dir.x / ray_dir.y);
       int step_x;
@@ -133,13 +136,13 @@ int main (void) {
         ray_len = dist_y - hyp_dist_y;
       }
 
-      if (ray_len > FOCAL_LEN) continue;
+      //if (ray_len > FOCAL_LEN) continue;
 
-      int col_height = roundf(RENDER_Y * (1 - ray_len / FOCAL_LEN));
+      int col_height = roundf(RENDER_Y / (ray_len * FOCAL_LEN / RENDER_DIST));
       int col_start = roundf((RENDER_Y - col_height) * 0.5f);
       col_color = ColorLerp(col_color, BLACK, ray_len / RENDER_DIST);
 
-      DrawLine(x, col_start, x, col_start + col_height, col_color);
+      DrawLine(x + 0.5f * RENDER_X, col_start, x + 0.5f * RENDER_X, col_start + col_height, col_color);
     }
 
     EndTextureMode();
