@@ -3,18 +3,12 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#define RENDER_DIST 2.5f
+#define RENDER_DIST 5.0f
 #define FOCAL_LEN 5.0f
-#define FOV 90
 #define ROT_SPEED 120
 #define MOVE_SPEED 1.0f
 #define RENDER_X 80
 #define RENDER_Y 60
-
-typedef struct {
-  
-} RaycastInfo;
-
 
 float wrap_geq(float f, float min, float max) {
   while (true) {
@@ -28,15 +22,18 @@ float wrap_geq(float f, float min, float max) {
 
 int main (void) {
   InitWindow(800, 600, "Raycasting");
+  SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
 
   // Init variables
-  Image map = LoadImage("maps/map2.png");
+  Image map = LoadImage("maps/map.png");
   Image bg = GenImageColor(RENDER_X, RENDER_Y, BLACK);
-  RenderTexture target = LoadRenderTexture(RENDER_X, RENDER_Y);
   float pixel_fraction = 1.0f / RENDER_X;
 
+  Texture wall_tex = LoadTexture("textures/wall.png");
+  RenderTexture target = LoadRenderTexture(RENDER_X, RENDER_Y);
+  Shader texture_shader = LoadShader(NULL, "texturer.frag");
+
   Vector2 pos = (Vector2){1.5f, 0.5f};
-  //Vector2 pos = (Vector2){0.0f, 10.0f};
   float rot = 0.0f;
 
   // Generate background depth effect
@@ -70,9 +67,8 @@ int main (void) {
     Vector2 right = Vector2Rotate((Vector2){0, 1}, rot);
 
     BeginTextureMode(target);
-
-    DrawTexture(bg_tex, 0, 0, WHITE);
-    
+    BeginBlendMode(BLEND_ADD_COLORS);
+    ClearBackground(BLANK);
     for (int x = -RENDER_X * 0.5f; x <= RENDER_X * 0.5f; x++) {
       Vector2 ray_dir = Vector2Add(forward, Vector2Scale(right, pixel_fraction * x));
       bool x_first = fabsf(ray_dir.x) > fabsf(ray_dir.y);
@@ -85,6 +81,8 @@ int main (void) {
       float hyp_dist_y = fabsf(1 / ray_dir.y);
       float dist_x;
       float dist_y;
+      float prev_dist_x = 0;
+      float prev_dist_y = 0;
       bool hit = false;
       int hit_side = 0;
       Color col_color = BLACK;
@@ -107,8 +105,6 @@ int main (void) {
       }
   
       while (hit == false) {
-        float prev_dist_x = dist_x;
-        float prev_dist_y = dist_y;
         if (dist_x < dist_y) {
           dist_x += hyp_dist_x;
           grid_x += step_x;
@@ -124,31 +120,58 @@ int main (void) {
         if ((hit_side == 0 && prev_dist_x >= RENDER_DIST) || 
             (hit_side == 1 && prev_dist_y >= RENDER_DIST)) break;
         if (!ColorIsEqual(col_color, BLACK)) hit = true;
+
+        prev_dist_x = dist_x;
+        prev_dist_y = dist_y;
       }
 
       if (!hit) continue; // ignore rays out of range
       
       float ray_len;
+      float wall_pos;
       if (hit_side == 0) {
         ray_len = dist_x - hyp_dist_x;
+        wall_pos = pos.y + ray_len * ray_dir.y;
       }
       else {
         ray_len = dist_y - hyp_dist_y;
+        wall_pos = pos.x + ray_len * ray_dir.x;
       }
-
-      //if (ray_len > FOCAL_LEN) continue;
+      wall_pos -= (int)wall_pos;
 
       int col_height = roundf(RENDER_Y / (ray_len * FOCAL_LEN / RENDER_DIST));
+      if (col_height > RENDER_Y * 3) col_height = RENDER_Y * 3; // prevent issues with column height approaching infinity
       int col_start = roundf((RENDER_Y - col_height) * 0.5f);
-      col_color = ColorLerp(col_color, BLACK, ray_len / RENDER_DIST);
 
-      DrawLine(x + 0.5f * RENDER_X, col_start, x + 0.5f * RENDER_X, col_start + col_height, col_color);
+      int col = x + 0.5f * RENDER_X;
+      for (int y = 0; y < col_height; y++) {
+        int pixel_y = (RENDER_Y - col_height) * 0.5 + y;
+        if (pixel_y < 0 || pixel_y > RENDER_Y) continue;
+        DrawPixel(col, RENDER_Y - pixel_y, (Color){
+            wall_pos * 255,                   // pos along tile wall
+            (float)y / col_height * 255,      // pos along column
+            col_color.r,                      // texture index
+            (1 - ray_len / RENDER_DIST) * 255 // brightness
+            });
+      }
     }
 
+    EndBlendMode();
     EndTextureMode();
 
+    SetShaderValueTexture(texture_shader, GetShaderLocation(texture_shader, "texture1"), wall_tex);
+
     BeginDrawing();
+
+    DrawTextureEx(bg_tex, (Vector2){0}, 0, (float)GetScreenWidth() / RENDER_X, WHITE);
+
+    BeginShaderMode(texture_shader);
     DrawTextureEx(target.texture, (Vector2){0}, 0, (float)GetScreenWidth() / RENDER_X, WHITE);
+    EndShaderMode();
+    char fps[5] = {0};
+    sprintf(fps, "%d", (int)(1 / GetFrameTime()));
+    DrawText(fps, 0, 0, 24, YELLOW);
+
     EndDrawing();
   }
   
@@ -157,6 +180,7 @@ int main (void) {
   UnloadTexture(bg_tex);
   UnloadImage(bg);
   UnloadImage(map);
+  UnloadShader(texture_shader);
 
   CloseWindow();
 }
