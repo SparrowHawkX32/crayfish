@@ -25,13 +25,13 @@ int main (void) {
   SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
 
   // Init variables
-  Image map = LoadImage("maps/map.png");
+  Image map = LoadImage("../maps/map.png");
   Image bg = GenImageColor(RENDER_X, RENDER_Y, BLACK);
   float pixel_fraction = 1.0f / RENDER_X;
 
-  Texture wall_tex = LoadTexture("textures/wall.png");
+  Texture wall_tex = LoadTexture("../textures/wall.png");
   RenderTexture target = LoadRenderTexture(RENDER_X, RENDER_Y);
-  Shader texture_shader = LoadShader(NULL, "texturer.frag");
+  Shader texture_shader = LoadShader(NULL, "../src/texturer.frag");
 
   Vector2 pos = (Vector2){1.5f, 0.5f};
   float rot = 0.0f;
@@ -168,9 +168,12 @@ int main (void) {
     BeginShaderMode(texture_shader);
     DrawTextureEx(target.texture, (Vector2){0}, 0, (float)GetScreenWidth() / RENDER_X, WHITE);
     EndShaderMode();
+
+    /*
     char fps[5] = {0};
-    sprintf(fps, "%d", (int)(1 / GetFrameTime()));
+    sprintf(fps, "%d", (int)(1 / GetFrameTime())); // THIS IS VERY BAD, CAUSING OVERFLOW PROBABLY
     DrawText(fps, 0, 0, 24, YELLOW);
+    */
 
     EndDrawing();
   }
