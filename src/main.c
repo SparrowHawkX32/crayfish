@@ -2,6 +2,7 @@
 #include <math.h>
 #include <raylib.h>
 #include <raymath.h>
+#include "util.h"
 
 #define RENDER_DIST 5.0f
 #define FOCAL_LEN 5.0f
@@ -9,15 +10,6 @@
 #define MOVE_SPEED 1.0f
 #define RENDER_X 80
 #define RENDER_Y 60
-
-float wrap_geq(float f, float min, float max) {
-  while (true) {
-    if (f < min) f += max;
-    else if (f >= max) f -= max;
-    else break;
-  }
-  return f;
-}
 
 
 int main (void) {
@@ -49,6 +41,7 @@ int main (void) {
 
     // Process input
     rot += (float)(IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT)) * DEG2RAD * ROT_SPEED * GetFrameTime();
+    rot = fmodf(rot, 360);
     Vector2 vel = {0};
     vel.x = (float)(IsKeyDown(KEY_W) - IsKeyDown(KEY_S));
     vel.y = (float)(IsKeyDown(KEY_D) - IsKeyDown(KEY_A));
