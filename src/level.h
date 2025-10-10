@@ -23,10 +23,11 @@ int deserialise_level(const char* buf, Level* level);
 
 int load_level(const char* path, Level* level);
 
-int load_levels_from_path(const char* path, Level** levels);
+int find_levels_in_dir(const char* path, char** levels);
+
+void save_level(Level* level, const char* path);
 
 void unload_level(Level* level);
 
-void unload_levels(Level** levels, int length);
 
 #endif

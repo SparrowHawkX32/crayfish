@@ -1,6 +1,5 @@
 #include "level.h"
 #include "util.h"
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -10,11 +9,8 @@
 int serialise_level(Level* level, String* buf) {
   char value_text[128] = {0};
 
-  string_append(buf, "name: ");
-  string_append(buf, level->name);
-
   sprintf(value_text, "%d", level->width);
-  string_append(buf, "\nwidth: ");
+  string_append(buf, "width: ");
   string_append(buf, value_text);
 
   sprintf(value_text, "%d", level->height);
@@ -93,20 +89,35 @@ int load_level(const char* path, Level* level) {
 }
 
 
-int load_levels_from_path(const char* path, Level** levels) {
+int find_levels_in_dir(const char* path, char** levels) {
 
   return 0;
+}
+
+
+void save_level(Level* level, const char* path) {
+  String level_txt;
+  string_init(&level_txt);
+  serialise_level(level, &level_txt);
+
+  FILE* level_file = fopen(path, "w");
+  if (level_file == NULL) {
+    printf("ERROR: failed to open file %s!\n", path);
+    return;
+  }
+
+  size_t bytes_written = fwrite(level_txt.data, 1, level_txt.length - 1, level_file);
+  if (bytes_written < level_txt.length - 1) {
+    printf("ERROR: failed to write level data to %s!\n", path);
+    return;
+  }
+
+  fclose(level_file);
+  free(level_txt.data);
 }
 
 
 void unload_level(Level* level) {
   free(level->map);
   free(level);
-}
-
-
-void unload_levels(Level** levels, int length) {
-  for (int i = 0; i < length; i++) {
-    unload_level(levels[i]);
-  }
 }
