@@ -8,6 +8,6 @@ Crayfish is a barebones raycasting renderer that turns 2D images into explorable
 - Make
 
 ## Build instructions
-`mkdir build && cd build`
-`cmake ..`
+`mkdir build && cd build`\
+`cmake ..`\
 `make`
