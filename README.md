@@ -1,5 +1,5 @@
 # 🦞 Crayfish - A Simple Raycasting Renderer
-Crayfish is a barebones raycasting renderer that turns 2D images into explorable 3D environments.
+Crayfish is a barebones raycasting renderer that turns 2D maps into explorable 3D environments.
 
 ## Requirements
 - A C compiler (tested with gcc)
