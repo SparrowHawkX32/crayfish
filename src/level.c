@@ -1,97 +1,74 @@
-#include "level.h"
-#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include "level.h"
+#include "util.h"
 
-#define U8_TEXT_LEN 8 / 3 + 1
 
+void serialise_level(Level* level, String* buf) {
+  unsigned char* map_pointer = level->map;
+  level->map = 0;
+  string_append_bytes(buf, level, sizeof(Level));
+  level->map = map_pointer;
 
-int serialise_level(Level* level, String* buf) {
-  char value_text[128] = {0};
-
-  sprintf(value_text, "%d", level->width);
-  string_append(buf, "width: ");
-  string_append(buf, value_text);
-
-  sprintf(value_text, "%d", level->height);
-  string_append(buf, "\nheight: ");
-  string_append(buf, value_text);
-
-  size_t map_size = (U8_TEXT_LEN + 1) * level->width * level->height + 1;
-  char* map_text = malloc(map_size);
-  size_t bytes_written = 0;
-
-  for (size_t y = 0; y < level->height; y++) {
-    if (bytes_written == map_size) {
-      printf("ERROR: Map buffer size mismatch!\n");
-      return 1;
-    }
-
-    map_text[bytes_written++] = '\n';
-    for (size_t x = 0; x < level->width; x++) {
-      if (x == level->width - 1) {
-        bytes_written += sprintf(
-            map_text + bytes_written,
-            "%d",
-            level->map[y * level->width + x]);
-        continue;
-      }
-      bytes_written += sprintf(
-          map_text + bytes_written,
-          "%d,",
-          level->map[y * level->width + x]);
-    }
-  }
-  string_append(buf, "\nmap:");
-  string_append(buf, map_text);
-
-  sprintf(value_text, "%.3f,%.3f", level->spawn_pos.x, level->spawn_pos.y);
-  string_append(buf, "\nspawn_pos: ");
-  string_append(buf, value_text);
-
-  sprintf(value_text, "%.2f", level->spawn_rot);
-  string_append(buf, "\nspawn_rot: ");
-  string_append(buf, value_text);
-
-  string_append(buf, "\natlas_name: ");
-  string_append(buf, level->atlas_name);
-
-  sprintf(value_text, "#%02x%02x%02x%02x",
-      level->floor_color.r, 
-      level->floor_color.g,
-      level->floor_color.b,
-      level->floor_color.a);
-  string_append(buf, "\nfloor_color: ");
-  string_append(buf, value_text);
-
-  sprintf(value_text, "#%02x%02x%02x%02x",
-      level->ceil_color.r, 
-      level->ceil_color.g,
-      level->ceil_color.b,
-      level->ceil_color.a);
-  string_append(buf, "\nceil_color: ");
-  string_append(buf, value_text);
-
-  free(map_text);
-  return 0;
+  string_append_bytes(buf, level->map, 
+      level->width * level->height);
 }
 
 
-int deserialise_level(const char* buf, Level* level) {
+int deserialise_level(const char* buf, size_t buf_len, Level* level) {
+  if (sizeof(Level) > buf_len) {
+    printf("ERROR: truncated level data!\n");
+    return 1;
+  }
+  memcpy(level, buf, sizeof(Level));
+
+  size_t map_size = level->width * level->height;
+  if (map_size > buf_len - sizeof(Level)) {
+    printf("ERROR: truncated level map data!\n");
+    return 1;
+  }
+  level->map = malloc(map_size);
+  memcpy(level->map, buf + sizeof(Level), map_size);
 
   return 0;
 }
 
 
 int load_level(const char* path, Level* level) {
+  struct stat file_info;
+  int result;
+  char* level_bytes;
   
-  return 0;
-}
+  result = stat(path, &file_info);
+  if (result != 0) {
+    printf("ERROR: failed to get file info for %s!\n", path);
+    return 1;
+  }
 
+  if (file_info.st_size < sizeof(Level)) {
+    printf("ERROR: incorrect level file!\n");
+    return 1;
+  }
 
-int find_levels_in_dir(const char* path, char** levels) {
+  FILE* level_file = fopen(path, "r");
+  if (level_file == NULL) {
+    printf("ERROR: failed to open file %s!\n", path);
+    return 1;
+  }
 
-  return 0;
+  level_bytes = malloc(file_info.st_size);
+  size_t bytes_read = fread(level_bytes, 1, file_info.st_size, level_file);
+  if (bytes_read < file_info.st_size) {
+    printf("ERROR: level file truncated!\n");
+    return 1;
+  }
+
+  result = deserialise_level(level_bytes, bytes_read, level);
+
+  free(level_bytes);
+  return result;
 }
 
 
@@ -106,7 +83,6 @@ void save_level(Level* level, const char* dir) {
     string_append(&file_path, "/");
   }
   string_append(&file_path, level->name);
-  string_append(&file_path, ".lvl");
 
   FILE* level_file = fopen(file_path.data, "w");
   if (level_file == NULL) {
@@ -119,9 +95,6 @@ void save_level(Level* level, const char* dir) {
   size_t bytes_written = fwrite(level_txt.data, 1, level_txt.length - 1, level_file);
   if (bytes_written < level_txt.length - 1) {
     printf("ERROR: failed to write level data to %s!\n", file_path.data);
-    free(level_txt.data);
-    free(file_path.data);
-    return;
   }
 
   fclose(level_file);
@@ -132,5 +105,4 @@ void save_level(Level* level, const char* dir) {
 
 void unload_level(Level* level) {
   free(level->map);
-  free(level);
 }

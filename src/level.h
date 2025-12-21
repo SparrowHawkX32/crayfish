@@ -17,13 +17,11 @@ typedef struct {
 } Level;
 
 
-int serialise_level(Level* level, String* buf);
+void serialise_level(Level* level, String* buf);
 
-int deserialise_level(const char* buf, Level* level);
+int deserialise_level(const char* buf, size_t buf_len, Level* level);
 
 int load_level(const char* path, Level* level);
-
-int find_levels_in_dir(const char* path, char** levels);
 
 void save_level(Level* level, const char* path);
 

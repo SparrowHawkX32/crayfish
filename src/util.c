@@ -39,6 +39,15 @@ void string_append(String* string, const char* str) {
 }
 
 
+void string_append_bytes(String *string, void *data, size_t bytes) {
+  while (string->capacity - string->length <= bytes) {
+    _string_resize(string);
+  }
+  memcpy(string->data + string->length - 1, data, bytes);
+  string->length += bytes + 1;
+}
+
+
 float wrap_geq(float f, float min, float max) {
   while (1) {
     if (f < min) f += max;
