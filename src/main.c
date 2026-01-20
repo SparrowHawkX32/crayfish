@@ -64,8 +64,6 @@ int main (void) {
     ClearBackground(BLANK);
     for (int x = -RENDER_X * 0.5f; x <= RENDER_X * 0.5f; x++) {
       Vector2 ray_dir = Vector2Add(forward, Vector2Scale(right, pixel_fraction * x));
-      bool x_first = fabsf(ray_dir.x) > fabsf(ray_dir.y);
-      float slope = fabsf(ray_dir.x / ray_dir.y);
       int step_x;
       int step_y;
       int grid_x = (int)pos.x;
@@ -134,7 +132,6 @@ int main (void) {
 
       int col_height = roundf(RENDER_Y / (ray_len * FOCAL_LEN / RENDER_DIST));
       if (col_height > RENDER_Y * 3) col_height = RENDER_Y * 3; // prevent issues with column height approaching infinity
-      int col_start = roundf((RENDER_Y - col_height) * 0.5f);
 
       int col = x + 0.5f * RENDER_X;
       for (int y = 0; y < col_height; y++) {

@@ -47,7 +47,7 @@ int load_level(const char* path, Level* level) {
     return 1;
   }
 
-  if (file_info.st_size < sizeof(Level)) {
+  if ((size_t)file_info.st_size < sizeof(Level)) {
     printf("ERROR: incorrect level file!\n");
     return 1;
   }
@@ -60,7 +60,7 @@ int load_level(const char* path, Level* level) {
 
   level_bytes = malloc(file_info.st_size);
   size_t bytes_read = fread(level_bytes, 1, file_info.st_size, level_file);
-  if (bytes_read < file_info.st_size) {
+  if (bytes_read < (size_t)file_info.st_size) {
     printf("ERROR: level file truncated!\n");
     return 1;
   }
