@@ -7,7 +7,7 @@ add_executable(crayfish src/main.c src/util.c src/level.c src/render.c)
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
   message(STATUS "Building in Debug mode")
-  add_compile_options(-Werror -Wall -Wextra -fsanitize=undefined,address)
+  add_compile_options(-Werror -Wall -Wextra -fsanitize=undefined,address -g)
   target_link_libraries(crayfish PUBLIC asan)
 endif()
 

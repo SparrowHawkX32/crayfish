@@ -14,7 +14,7 @@
 
 int main (void) {
   InitWindow(800, 600, "Raycasting");
-  SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
+  SetWindowState(FLAG_WINDOW_RESIZABLE);
 
   Level test_level = {
     .width = 5,
@@ -99,10 +99,14 @@ int main (void) {
     DrawTextureEx(target.texture, (Vector2){0}, 0, (float)GetScreenWidth() / ctx.render_size.x, WHITE);
     EndShaderMode();
 
-    char pos_text[128] = "";
+    char pos_text[32] = "";
+    char fps_text[32] = "";
+
     sprintf(pos_text, "X: %.2f, Y: %.2f", ctx.cam_pos.x, ctx.cam_pos.y);
+    sprintf(fps_text, "FPS: %.0f", 1 / GetFrameTime());
 
     DrawText(pos_text, 0, 0, 24, BLACK);
+    DrawText(fps_text, 0, 28, 24, BLACK);
 
     EndDrawing();
   }
