@@ -81,9 +81,14 @@ int main (void) {
     Vector2 new_pos = Vector2Add(ctx.cam_pos, vel);
     new_pos.x = Wrap(new_pos.x, 0, ctx.level->width);
     new_pos.y = Wrap(new_pos.y, 0, ctx.level->height);
-    if (ctx.level->map[(int)new_pos.y * ctx.level->width + (int)new_pos.x] == 0) {
-      ctx.cam_pos = new_pos;
+    if (ctx.level->map[(int)ctx.cam_pos.y * ctx.level->width + (int)new_pos.x] != 0) {
+      new_pos.x = ctx.cam_pos.x;
     }
+    if (ctx.level->map[(int)new_pos.y * ctx.level->width + (int)ctx.cam_pos.x] != 0) {
+      new_pos.y = ctx.cam_pos.y;
+    }
+    ctx.cam_pos = new_pos;
+    
 
     ctx.cam_forward = Vector2Rotate(ctx.cam_forward, rot);
     ctx.cam_right = Vector2Rotate(ctx.cam_right, rot);
