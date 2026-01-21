@@ -46,13 +46,3 @@ void string_append_bytes(String *string, void *data, size_t bytes) {
   memcpy(string->data + string->length - 1, data, bytes);
   string->length += bytes + 1;
 }
-
-
-float wrap_geq(float f, float min, float max) {
-  while (1) {
-    if (f < min) f += max;
-    else if (f >= max) f -= max;
-    else break;
-  }
-  return f;
-}

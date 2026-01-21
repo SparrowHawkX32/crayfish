@@ -3,7 +3,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 project(crayfish LANGUAGES C)
 
-add_executable(crayfish src/main.c src/util.c src/level.c)
+add_executable(crayfish src/main.c src/util.c src/level.c src/render.c)
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
   message(STATUS "Building in Debug mode")
