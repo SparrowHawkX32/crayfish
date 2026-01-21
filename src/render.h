@@ -18,6 +18,8 @@ typedef struct {
   float render_dist;
   float focal_len;
   Vector2 render_size;
+  Image* atlas;
+  Color* atlasColors;
 } RenderContext;
 
 typedef struct {
@@ -33,9 +35,6 @@ void cast_ray(const RenderContext* ctx, float screen_pos, CastResult* result);
 
 
 void render_scene(const RenderContext* ctx, RenderTexture* target);
-
-
-void apply_textures(const RenderContext* ctx, Texture* render);
 
 
 #endif

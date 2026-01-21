@@ -3,7 +3,6 @@
 #include <raylib.h>
 #include <raymath.h>
 
-
 // h_offset should be from -0.5 to 0.5
 void cast_ray(const RenderContext *ctx, float h_offset, CastResult *result) {
   // Initialise variables
@@ -82,6 +81,7 @@ void cast_ray(const RenderContext *ctx, float h_offset, CastResult *result) {
     wall_pos = ctx->cam_pos.x + ray_len * ray_dir.x;
   }
   wall_pos -= (int)wall_pos;
+  if (wall_pos < 0) wall_pos += 1;
 
   result->distance = ray_len;
   result->wall_pos = wall_pos;
@@ -90,7 +90,6 @@ void cast_ray(const RenderContext *ctx, float h_offset, CastResult *result) {
 
 void render_scene(const RenderContext* ctx, RenderTexture* target) {
   BeginTextureMode(*target);
-  BeginBlendMode(BLEND_ADD_COLORS);
   ClearBackground(BLANK);
   for (float x = -0.5f; x <= 0.5f; x += 1 / ctx->render_size.x) {
     CastResult result = {0};
@@ -105,18 +104,15 @@ void render_scene(const RenderContext* ctx, RenderTexture* target) {
     for (int y = 0; y < col_height; y++) {
       int pixel_y = (ctx->render_size.y - col_height) * 0.5 + y;
       if (pixel_y < 0 || pixel_y > ctx->render_size.y) continue;
-      DrawPixel(col, ctx->render_size.y - pixel_y, (Color){
-          result.wall_pos * 255,                          // pos along tile wall
-          (float)y / col_height * 255,                    // pos along column
-          result.atlas_idx,                               // texture index
-          (1 - result.distance / ctx->render_dist) * 255  // brightness
-          });
+
+      int atlas_x = ((float)result.atlas_idx - 1 + result.wall_pos) * ctx->atlas->height;
+      int atlas_y = (float)y / col_height * ctx->atlas->height;
+      Color pixel_color = ctx->atlasColors[atlas_y * ctx->atlas->width + atlas_x];
+      pixel_color = ColorLerp(pixel_color, BLACK, result.distance / ctx->render_dist);
+
+      DrawPixel(col, ctx->render_size.y - pixel_y, pixel_color);
     }
   }
 
-  EndBlendMode();
   EndTextureMode();
 }
-
-
-void apply_textures(const RenderContext* ctx, Texture* render);

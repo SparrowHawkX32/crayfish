@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include "level.h"
 #include "render.h"
-#include "util.h"
 
 #define ROT_SPEED 120
 #define MOVE_SPEED 1.0f
@@ -49,12 +48,14 @@ int main (void) {
 
 
   // Init variables
-  Image bg = GenImageColor(ctx.render_size.x, ctx.render_size.y, BLACK);
 
-  Texture wall_tex = LoadTexture("../textures/wall.png");
+  Image atlas = LoadImage("../textures/wall.png");
+  ctx.atlas = &atlas;
+  ctx.atlasColors = LoadImageColors(atlas);
+
   RenderTexture target = LoadRenderTexture(ctx.render_size.x, ctx.render_size.y);
-  Shader texture_shader = LoadShader(NULL, "../src/texturer.frag");
 
+  Image bg = GenImageColor(ctx.render_size.x, ctx.render_size.y, BLACK);
   // Generate background depth effect
   for (int i = 0; i < ctx.render_size.y; i++) {
     Color row_color = ColorLerp(BROWN, BLACK, 1 - fabsf(ctx.render_size.y * 0.5f - i) / ctx.render_size.y * 2);
@@ -89,15 +90,10 @@ int main (void) {
 
     render_scene(&ctx, &target);
 
-    SetShaderValueTexture(texture_shader, GetShaderLocation(texture_shader, "texture1"), wall_tex);
-
     BeginDrawing();
 
     DrawTextureEx(bg_tex, (Vector2){0}, 0, (float)GetScreenWidth() / ctx.render_size.x, WHITE);
-
-    BeginShaderMode(texture_shader);
     DrawTextureEx(target.texture, (Vector2){0}, 0, (float)GetScreenWidth() / ctx.render_size.x, WHITE);
-    EndShaderMode();
 
     char pos_text[32] = "";
     char fps_text[32] = "";
@@ -115,7 +111,8 @@ int main (void) {
   UnloadRenderTexture(target);
   UnloadTexture(bg_tex);
   UnloadImage(bg);
-  UnloadShader(texture_shader);
+  UnloadImageColors(ctx.atlasColors);
+  UnloadImage(atlas);
 
   unload_level(&test_level);
 
