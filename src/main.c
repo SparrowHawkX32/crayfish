@@ -22,15 +22,17 @@ int main (void) {
     .name = "test_level",
     .ceil_color = BLACK,
     .floor_color = BLACK,
-    .spawn_pos = (Vector2){2.5f, 0.5f},
+    .spawn_pos = (Vector2){2.5f, 2.5f},
     .spawn_rot = 0
   };
   unsigned char* test_map = malloc(test_level.width * test_level.height);
   for (int y = 0; y < test_level.height; y++) {
     for (int x = 0; x < test_level.width; x++) {
       test_map[y * test_level.width + x] = 0;
-      if (x == 0 || x == test_level.width - 1 /* || y == 0 || y == test_level.height - 1 */) {
-        test_map[y * test_level.width + x] = 1;
+      if (x == 0 || x == test_level.width - 1  || y == 0 || y == test_level.height - 1) {
+        SetRandomSeed(x * y);
+        int wall_idx = GetRandomValue(1, 5) == 1 ? 2 : 1;
+        test_map[y * test_level.width + x] = wall_idx;
       }
     }
   }
@@ -49,7 +51,7 @@ int main (void) {
 
   // Init variables
 
-  Image atlas = LoadImage("../textures/wall.png");
+  Image atlas = LoadImage("../textures/leaf-sheet.png");
   ctx.atlas = &atlas;
   ctx.atlasColors = LoadImageColors(atlas);
 
