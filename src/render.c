@@ -108,18 +108,21 @@ void render_scene(const RenderContext* ctx, RenderTexture* target) {
       int atlas_y;
       if (col_height > render_height) {
         pixel_y = y;
-        atlas_y = (float)(y + (col_height - ctx->render_size.y) * 0.5) / col_height * ctx->atlas->height;
+        atlas_y = (float)(y + (col_height - ctx->render_size.y) * 0.5f) / col_height * ctx->atlas->height;
       }
       else {
-        pixel_y = (ctx->render_size.y - col_height) * 0.5 + y;
+        pixel_y = (float)(ctx->render_size.y - col_height) * 0.5f + y;
         atlas_y = (float)y / col_height * ctx->atlas->height;
       }
+
+      int num_textures = ctx->atlas->width / ctx->atlas->height;
+      if (result.atlas_idx > num_textures) result.atlas_idx = 1;
 
       int atlas_x = ((float)result.atlas_idx - 1 + result.wall_pos) * ctx->atlas->height;
       Color pixel_color = ctx->atlasColors[atlas_y * ctx->atlas->width + atlas_x];
       pixel_color = ColorLerp(pixel_color, BLACK, result.distance / ctx->render_dist);
 
-      DrawPixel(col, ctx->render_size.y - pixel_y, pixel_color);
+      DrawPixel(col, ctx->render_size.y - 1 - pixel_y, pixel_color);
     }
   }
 
