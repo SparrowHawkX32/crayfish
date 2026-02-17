@@ -22,9 +22,9 @@ int main (void) {
     .name = "test_level",
     .spawn_pos = (Vector2){2.5f, 2.5f},
     .spawn_rot = 0,
-    .ceil_color = SKYBLUE,
-    .floor_color = BROWN,
-    .air_color = SKYBLUE,
+    .ceil_color = (Color){8, 16, 0, 255},
+    .air_color = (Color){8, 16, 0, 255},
+    .floor_color = (Color){0, 32, 0, 255},
   };
   unsigned char* test_map = malloc(test_level.width * test_level.height);
   for (int y = 0; y < test_level.height; y++) {
@@ -41,7 +41,7 @@ int main (void) {
 
   RenderContext ctx = {
     .render_dist = DEFAULT_RENDER_DIST,
-    .focal_len = DEFAULT_FOCAL_LEN,
+    .fov = DEFAULT_FOV,
     .cam_forward = Vector2Rotate((Vector2){1.0f, 0.0f}, test_level.spawn_rot),
     .cam_right = Vector2Rotate((Vector2){0.0f, 1.0f}, test_level.spawn_rot),
     .cam_pos = test_level.spawn_pos,

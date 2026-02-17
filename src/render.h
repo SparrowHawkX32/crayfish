@@ -6,7 +6,7 @@
 #include "level.h"
 
 #define DEFAULT_RENDER_DIST 5.0f
-#define DEFAULT_FOCAL_LEN 5.0f
+#define DEFAULT_FOV 1.0f
 #define DEFAULT_RENDER_X 80
 #define DEFAULT_RENDER_Y 60
 
@@ -16,7 +16,7 @@ typedef struct {
   Vector2 cam_forward;
   Vector2 cam_right;
   float render_dist;
-  float focal_len;
+  float fov;
   Vector2 render_size;
   Image atlas;
   Color* atlasColors;

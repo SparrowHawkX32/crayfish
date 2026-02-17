@@ -120,11 +120,11 @@ void render_scene(const RenderContext* ctx, RenderTexture* target) {
   ClearBackground(BLANK);
   for (float x = -0.5f; x <= 0.5f; x += 1 / ctx->render_size.x) {
     CastResult result = {0};
-    cast_ray(ctx, x, &result);
+    cast_ray(ctx, x * ctx->fov, &result);
 
     if (!result.hit) continue;
 
-    int col_height = roundf(ctx->render_size.y / (result.distance * ctx->focal_len / ctx->render_dist));
+    int col_height = roundf(ctx->render_size.y / result.distance);
     if (col_height < 0) col_height = INT_MAX;
 
     int render_height = col_height < ctx->render_size.y ? col_height : ctx->render_size.y;
