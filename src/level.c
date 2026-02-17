@@ -36,7 +36,7 @@ int deserialise_level(const char* buf, size_t buf_len, Level* level) {
 }
 
 
-int load_level(const char* path, Level* level) {
+int load_level_file(const char* path, Level* level) {
   struct stat file_info;
   int result;
   char* level_bytes;
@@ -72,7 +72,7 @@ int load_level(const char* path, Level* level) {
 }
 
 
-void save_level(Level* level, const char* dir) {
+void save_level_file(Level* level, const char* dir) {
   String level_txt, file_path;
   string_init(&level_txt);
   string_init(&file_path);

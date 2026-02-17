@@ -18,7 +18,7 @@ typedef struct {
   float render_dist;
   float focal_len;
   Vector2 render_size;
-  Image* atlas;
+  Image atlas;
   Color* atlasColors;
 } RenderContext;
 
@@ -27,12 +27,12 @@ typedef struct {
   bool hit;
   float distance;
   float wall_pos;
-
 } CastResult;
 
 
-void cast_ray(const RenderContext* ctx, float screen_pos, CastResult* result);
+void change_level(RenderContext* ctx, Level* level, RenderTexture* background);
 
+void cast_ray(const RenderContext* ctx, float screen_pos, CastResult* result);
 
 void render_scene(const RenderContext* ctx, RenderTexture* target);
 

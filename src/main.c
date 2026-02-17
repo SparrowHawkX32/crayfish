@@ -20,10 +20,11 @@ int main (void) {
     .height = 5,
     .atlas_name = "",
     .name = "test_level",
-    .ceil_color = BLACK,
-    .floor_color = BLACK,
     .spawn_pos = (Vector2){2.5f, 2.5f},
-    .spawn_rot = 0
+    .spawn_rot = 0,
+    .ceil_color = SKYBLUE,
+    .floor_color = BROWN,
+    .air_color = SKYBLUE,
   };
   unsigned char* test_map = malloc(test_level.width * test_level.height);
   for (int y = 0; y < test_level.height; y++) {
@@ -39,7 +40,6 @@ int main (void) {
   test_level.map = test_map;
 
   RenderContext ctx = {
-    .level = &test_level,
     .render_dist = DEFAULT_RENDER_DIST,
     .focal_len = DEFAULT_FOCAL_LEN,
     .cam_forward = Vector2Rotate((Vector2){1.0f, 0.0f}, test_level.spawn_rot),
@@ -48,22 +48,14 @@ int main (void) {
     .render_size = (Vector2){DEFAULT_RENDER_X, DEFAULT_RENDER_Y}
   };
 
-
   // Init variables
-
-  Image atlas = LoadImage("../textures/leaf-sheet.png");
-  ctx.atlas = &atlas;
-  ctx.atlasColors = LoadImageColors(atlas);
+  ctx.atlas = LoadImage("../textures/leaf-sheet.png");;
+  ctx.atlasColors = LoadImageColors(ctx.atlas);
 
   RenderTexture target = LoadRenderTexture(ctx.render_size.x, ctx.render_size.y);
+  RenderTexture bg = LoadRenderTexture(ctx.render_size.x, ctx.render_size.y);
 
-  Image bg = GenImageColor(ctx.render_size.x, ctx.render_size.y, BLACK);
-  // Generate background depth effect
-  for (int i = 0; i < ctx.render_size.y; i++) {
-    Color row_color = ColorLerp(BROWN, BLACK, 1 - fabsf(ctx.render_size.y * 0.5f - i) / ctx.render_size.y * 2);
-    ImageDrawLine(&bg, 0, i, ctx.render_size.x, i, row_color);
-  }
-  Texture bg_tex = LoadTextureFromImage(bg);
+  change_level(&ctx, &test_level, &bg);
 
   // Main loop
   while (!WindowShouldClose()) {
@@ -91,7 +83,6 @@ int main (void) {
     }
     ctx.cam_pos = new_pos;
     
-
     ctx.cam_forward = Vector2Rotate(ctx.cam_forward, rot);
     ctx.cam_right = Vector2Rotate(ctx.cam_right, rot);
 
@@ -99,7 +90,7 @@ int main (void) {
 
     BeginDrawing();
 
-    DrawTextureEx(bg_tex, (Vector2){0}, 0, (float)GetScreenWidth() / ctx.render_size.x, WHITE);
+    DrawTextureEx(bg.texture, (Vector2){0}, 0, (float)GetScreenWidth() / ctx.render_size.x, WHITE);
     DrawTextureEx(target.texture, (Vector2){0}, 0, (float)GetScreenWidth() / ctx.render_size.x, WHITE);
 
     char pos_text[32] = "";
@@ -116,10 +107,9 @@ int main (void) {
   
   // Unload resources
   UnloadRenderTexture(target);
-  UnloadTexture(bg_tex);
-  UnloadImage(bg);
+  UnloadRenderTexture(bg);
   UnloadImageColors(ctx.atlasColors);
-  UnloadImage(atlas);
+  UnloadImage(ctx.atlas);
 
   unload_level(&test_level);
 

@@ -14,6 +14,7 @@ typedef struct {
   char atlas_name[128];
   Color floor_color;
   Color ceil_color;
+  Color air_color;
 } Level;
 
 
@@ -21,9 +22,9 @@ void serialise_level(Level* level, String* buf);
 
 int deserialise_level(const char* buf, size_t buf_len, Level* level);
 
-int load_level(const char* path, Level* level);
+int load_level_file(const char* path, Level* level);
 
-void save_level(Level* level, const char* path);
+void save_level_file(Level* level, const char* path);
 
 void unload_level(Level* level);
 

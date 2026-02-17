@@ -1,7 +1,34 @@
 #include "render.h"
+#include "level.h"
 #include <limits.h>
 #include <raylib.h>
 #include <raymath.h>
+#include <stdio.h>
+
+
+void change_level(RenderContext *ctx, Level *level, RenderTexture* background) {
+  if (ctx->level) unload_level(ctx->level);
+  ctx->level = level;
+
+  // Generate background
+  BeginTextureMode(*background);
+  for (int y = 1; y <= ctx->render_size.y; y++) {
+    Color outer_color;
+    float blend_fac = 1 - fabsf(ctx->render_size.y * 0.5f - y) / ctx->render_size.y * 2;
+
+    if (y < ctx->render_size.y * 0.5f) {
+      outer_color = ctx->level->floor_color;
+    }
+    else {
+      outer_color= ctx->level->ceil_color;
+    }
+
+    Color row_color = ColorLerp(outer_color, ctx->level->air_color, blend_fac);
+    DrawLine(0, y, ctx->render_size.x, y, row_color);
+  }
+  EndTextureMode();
+}
+
 
 // h_offset should be from -0.5 to 0.5
 void cast_ray(const RenderContext *ctx, float h_offset, CastResult *result) {
@@ -108,19 +135,19 @@ void render_scene(const RenderContext* ctx, RenderTexture* target) {
       int atlas_y;
       if (col_height > render_height) {
         pixel_y = y;
-        atlas_y = (float)(y + (col_height - ctx->render_size.y) * 0.5f) / col_height * ctx->atlas->height;
+        atlas_y = (float)(y + (col_height - ctx->render_size.y) * 0.5f) / col_height * ctx->atlas.height;
       }
       else {
         pixel_y = (float)(ctx->render_size.y - col_height) * 0.5f + y;
-        atlas_y = (float)y / col_height * ctx->atlas->height;
+        atlas_y = (float)y / col_height * ctx->atlas.height;
       }
 
-      int num_textures = ctx->atlas->width / ctx->atlas->height;
+      int num_textures = ctx->atlas.width / ctx->atlas.height;
       if (result.atlas_idx > num_textures) result.atlas_idx = 1;
 
-      int atlas_x = ((float)result.atlas_idx - 1 + result.wall_pos) * ctx->atlas->height;
-      Color pixel_color = ctx->atlasColors[atlas_y * ctx->atlas->width + atlas_x];
-      pixel_color = ColorLerp(pixel_color, BLACK, result.distance / ctx->render_dist);
+      int atlas_x = ((float)result.atlas_idx - 1 + result.wall_pos) * ctx->atlas.height;
+      Color pixel_color = ctx->atlasColors[atlas_y * ctx->atlas.width + atlas_x];
+      pixel_color = ColorLerp(pixel_color, ctx->level->air_color, result.distance / ctx->render_dist);
 
       DrawPixel(col, ctx->render_size.y - 1 - pixel_y, pixel_color);
     }
