@@ -21,4 +21,7 @@ void string_append(String* string, const char* str);
 
 void string_append_bytes(String* string, void* data, size_t bytes);
 
+void string_zero(String* string);
+
+
 #endif

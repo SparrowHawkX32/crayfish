@@ -1,3 +1,4 @@
+#include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +37,7 @@ int deserialise_level(const char* buf, size_t buf_len, Level* level) {
 }
 
 
-int load_level_file(const char* path, Level* level) {
+Level* load_level_file(const char* path) {
   struct stat file_info;
   int result;
   char* level_bytes;
@@ -44,31 +45,35 @@ int load_level_file(const char* path, Level* level) {
   result = stat(path, &file_info);
   if (result != 0) {
     printf("ERROR: failed to get file info for %s!\n", path);
-    return 1;
+    return NULL;
   }
 
   if ((size_t)file_info.st_size < sizeof(Level)) {
     printf("ERROR: incorrect level file!\n");
-    return 1;
+    return NULL;
   }
+
 
   FILE* level_file = fopen(path, "r");
   if (level_file == NULL) {
     printf("ERROR: failed to open file %s!\n", path);
-    return 1;
+    return NULL;
   }
 
+  Level* lvl = malloc(sizeof(Level));
   level_bytes = malloc(file_info.st_size);
   size_t bytes_read = fread(level_bytes, 1, file_info.st_size, level_file);
   if (bytes_read < (size_t)file_info.st_size) {
     printf("ERROR: level file truncated!\n");
-    return 1;
+    free(level_bytes);
+    free(lvl);
+    return NULL;
   }
 
-  result = deserialise_level(level_bytes, bytes_read, level);
-
+  result = deserialise_level(level_bytes, bytes_read, lvl);
   free(level_bytes);
-  return result;
+
+  return lvl;
 }
 
 
@@ -83,6 +88,7 @@ void save_level_file(Level* level, const char* dir) {
     string_append(&file_path, "/");
   }
   string_append(&file_path, level->name);
+  string_append(&file_path, ".lvl");
 
   FILE* level_file = fopen(file_path.data, "w");
   if (level_file == NULL) {
@@ -104,5 +110,7 @@ void save_level_file(Level* level, const char* dir) {
 
 
 void unload_level(Level* level) {
+  if (level == NULL) return;
   free(level->map);
+  free(level);
 }

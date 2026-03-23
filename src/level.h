@@ -22,11 +22,13 @@ void serialise_level(Level* level, String* buf);
 
 int deserialise_level(const char* buf, size_t buf_len, Level* level);
 
-int load_level_file(const char* path, Level* level);
+Level* load_level_file(const char* path);
 
 void save_level_file(Level* level, const char* path);
 
 void unload_level(Level* level);
+
+void scan_levels(const char* user_path);
 
 
 #endif

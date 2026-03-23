@@ -46,3 +46,9 @@ void string_append_bytes(String *string, void *data, size_t bytes) {
   memcpy(string->data + string->length - 1, data, bytes);
   string->length += bytes + 1;
 }
+
+
+void string_zero(String *string) {
+  memset(string->data, 0, string->length);
+  string->length = 0;
+}

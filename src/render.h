@@ -10,6 +10,10 @@
 #define DEFAULT_RENDER_X 80
 #define DEFAULT_RENDER_Y 60
 
+#define ROT_SPEED 120
+#define MOUSE_SENS 0.1f // Radians per pixel
+#define MOVE_SPEED 1.0f
+
 typedef struct {
   Level* level;
   Vector2 cam_pos;
@@ -20,6 +24,8 @@ typedef struct {
   Vector2 render_size;
   Image atlas;
   Color* atlasColors;
+  RenderTexture bg;
+  RenderTexture target;
 } RenderContext;
 
 typedef struct {
@@ -30,11 +36,19 @@ typedef struct {
 } CastResult;
 
 
-void change_level(RenderContext* ctx, Level* level, RenderTexture* background);
+void init_render_ctx(RenderContext* ctx);
+
+void unload_render_ctx(RenderContext* ctx);
+
+void change_level(RenderContext* ctx, Level* level);
+
+void process_input(RenderContext* ctx);
 
 void cast_ray(const RenderContext* ctx, float screen_pos, CastResult* result);
 
-void render_scene(const RenderContext* ctx, RenderTexture* target);
+void render_scene(const RenderContext* ctx);
+
+void draw_scene(const RenderContext* ctx);
 
 
 #endif
