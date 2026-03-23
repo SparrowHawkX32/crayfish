@@ -3,7 +3,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 project(crayfish LANGUAGES C)
 
-add_executable(crayfish src/main.c src/util.c src/level.c src/render.c)
+add_executable(crayfish src/main.c src/util.c src/level.c src/render.c src/ui.c)
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
   message(STATUS "Building in Debug mode")
@@ -11,5 +11,5 @@ if (CMAKE_BUILD_TYPE STREQUAL Debug)
   target_link_libraries(crayfish PUBLIC asan)
 endif()
 
-target_include_directories(crayfish PUBLIC src)
+target_include_directories(crayfish PUBLIC src include/raygui-4.0/src)
 target_link_libraries(crayfish PUBLIC raylib m) # MATH
