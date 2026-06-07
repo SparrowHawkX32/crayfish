@@ -13,6 +13,15 @@ void init_render_ctx(RenderContext* ctx) {
   ctx->render_size = (Vector2){DEFAULT_RENDER_Y, DEFAULT_RENDER_Y};
   ctx->target = LoadRenderTexture(ctx->render_size.x, ctx->render_size.y);
   ctx->bg = LoadRenderTexture(ctx->render_size.x, ctx->render_size.y);
+  ctx->atlas = GenImageColor(16 * 254, 16, RAYWHITE);
+  char num[4] = "";
+  for (int i = 0; i < 254; i++) {
+    ImageDrawRectangle(&ctx->atlas, 16 * i, 0, 8, 8, GRAY);
+    ImageDrawRectangle(&ctx->atlas, 16 * i + 8, 8, 8, 8, GRAY);
+    sprintf((char*)&num, "%d", i + 1);
+    ImageDrawText(&ctx->atlas, (const char*)&num, 16 * i, 0, 10, BLACK);
+  }
+  ctx->atlasColors = LoadImageColors(ctx->atlas);
 }
 
 
@@ -48,6 +57,19 @@ void change_level(RenderContext *ctx, Level *level) {
     DrawLine(0, y, ctx->render_size.x, y, row_color);
   }
   EndTextureMode();
+}
+
+
+void change_atlas(RenderContext* ctx, const char* path) {
+      Image new_atlas = LoadImage(path);
+
+      if (new_atlas.data != NULL) {
+        UnloadImageColors(ctx->atlasColors);
+        UnloadImage(ctx->atlas);
+        ctx->atlas = new_atlas;
+        ctx->atlasColors = LoadImageColors(new_atlas);
+      }
+      else UnloadImage(new_atlas);
 }
 
 

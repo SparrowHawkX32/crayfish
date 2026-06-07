@@ -42,6 +42,8 @@ void unload_render_ctx(RenderContext* ctx);
 
 void change_level(RenderContext* ctx, Level* level);
 
+void change_atlas(RenderContext* ctx, const char* path);
+
 void process_input(RenderContext* ctx);
 
 void cast_ray(const RenderContext* ctx, float screen_pos, CastResult* result);

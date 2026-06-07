@@ -17,10 +17,6 @@ int main (void) {
   UIState ui_state = {0};
   init_ui(&ui_state);
 
-  //TODO: move to render code
-  ctx.atlas = LoadImage("../textures/leaf-sheet.png");;
-  ctx.atlasColors = LoadImageColors(ctx.atlas);
-
   // Main loop
   while (!WindowShouldClose()) {
     process_input(&ctx);

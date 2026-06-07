@@ -14,12 +14,15 @@
 void init_ui(UIState *state) {
   int text_size = GetMonitorWidth(GetCurrentMonitor()) > 1920 ? 32 : 24;
   GuiSetStyle(DEFAULT, TEXT_SIZE, text_size);
-  //GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+  GuiSetStyle(DROPDOWNBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
 
-  // Scan + populate levels
+  // Scan + populate levels + atlases
   strncpy(state->menu.lvl_path, DEFAULT_LEVEL_PATH, sizeof(state->menu.lvl_path));
   state->menu.levels = LoadDirectoryFilesEx(state->menu.lvl_path, ".lvl", true);
+  strncpy(state->menu.atlas_path, DEFAULT_ATLAS_PATH, sizeof(state->menu.atlas_path));
+  state->menu.atlases = LoadDirectoryFilesEx(state->menu.atlas_path, ".png", true);
   string_init(&state->menu.lvl_dd_entries);
+  string_init(&state->menu.atlas_dd_entries);
   String path = {0};
   string_init(&path);
   for (int i = 0; i < state->menu.levels.count; i++) {
@@ -34,6 +37,20 @@ void init_ui(UIState *state) {
     }
     string_append(&state->menu.lvl_dd_entries, token);
   }
+
+  for (int i = 0; i < state->menu.atlases.count; i++) {
+    if (i) string_append(&state->menu.atlas_dd_entries, ";");
+
+    string_zero(&path);
+    string_append(&path, state->menu.atlases.paths[i]);
+    char* token = NULL;
+    char* next_token = path.data;
+    while (next_token != NULL){
+      token = strsep(&next_token, "/");
+    }
+    string_append(&state->menu.atlas_dd_entries, token);
+  }
+
   free(path.data);
 }
 
@@ -106,9 +123,40 @@ void draw_ui(UIState* state, RenderContext* ctx) {
           .y = lvl_path.y + text_size + PADDING,
           .width = lvl_scan.width,
           .height = text_size};
+    Rectangle atlas_panel = {
+          .x = panel_width + 4 * PADDING,
+          .y = PADDING,
+          .width = panel_width + 2 * PADDING,
+          .height = 5 * (text_size + PADDING)};
+    Rectangle atlas_dropdown = {
+          .x = atlas_panel.x + PADDING,
+          .y = atlas_panel.y + text_size + PADDING,
+          .width = panel_width,
+          .height = text_size};
+    Rectangle atlas_load = {
+          .x = atlas_dropdown.x,
+          .y = atlas_dropdown.y + text_size + PADDING,
+          .width = panel_width,
+          .height = text_size};
+    Rectangle atlas_path = {
+          .x = atlas_dropdown.x,
+          .y = atlas_load.y + text_size + PADDING,
+          .width = panel_width,
+          .height = text_size};
+    Rectangle atlas_scan = {
+          .x = atlas_dropdown.x,
+          .y = atlas_path.y + text_size + PADDING,
+          .width = (panel_width - PADDING) * 0.5f,
+          .height = text_size};
+    Rectangle atlas_default = {
+          .x = atlas_scan.x + lvl_scan.width + PADDING,
+          .y = atlas_path.y + text_size + PADDING,
+          .width = atlas_scan.width,
+          .height = text_size};
 
-    if (state->menu.lvl_dd_edit) GuiLock();
+    if (state->menu.lvl_dd_edit || state->menu.atlas_dd_edit) GuiLock();
 
+    // LEVEL PANEL
     GuiPanel(lvl_panel, "Level");
 
     if (GuiButton(lvl_load, "Load")) {
@@ -116,6 +164,13 @@ void draw_ui(UIState* state, RenderContext* ctx) {
 
       if (new_lvl != NULL) {
         change_level(ctx, new_lvl);
+
+        for (int i = 0; i < state->menu.atlases.count; i++) {
+          if (TextFindIndex(state->menu.atlases.paths[i], ctx->level->atlas_name) >= 0) {
+            change_atlas(ctx, state->menu.atlases.paths[i]);
+            break;
+          }
+        }
       }
     }
 
@@ -127,23 +182,42 @@ void draw_ui(UIState* state, RenderContext* ctx) {
         UnloadDirectoryFiles(state->menu.levels);
       }
       state->menu.levels = LoadDirectoryFilesEx(state->menu.lvl_path, ".lvl", true);
-      printf("Found %d levels in %s - %d\n", state->menu.levels.count, state->menu.lvl_path, state->menu.levels.capacity);
+      printf("Found %d levels in %s\n", state->menu.levels.count, state->menu.lvl_path);
     }
 
     if (GuiButton(lvl_default, "Default")) {
       strncpy(state->menu.lvl_path, DEFAULT_LEVEL_PATH, sizeof(state->menu.lvl_path));
     }
 
-    // DRAW LAST IN LEVEL PANEL
+    // Draw last in level panel
     state->menu.lvl_dd_edit ^= GuiDropdownBox(lvl_dropdown, state->menu.lvl_dd_entries.data, 
           &state->menu.lvl_dd_active, state->menu.lvl_dd_edit);
 
-    GuiPanel((Rectangle){
-          .x = panel_width + 4 * PADDING,
-          .y = PADDING,
-          .width = panel_width + 2 * PADDING,
-          .height = text_size}, 
-        "Camera");
+    // ATLAS PANEL
+    GuiPanel(atlas_panel, "Textures");
+
+    if (GuiButton(atlas_load, "Load")) {
+      change_atlas(ctx, state->menu.atlases.paths[state->menu.atlas_dd_active]);
+    }
+
+    state->menu.atlas_path_edit ^= GuiTextBox(atlas_path,
+        state->menu.atlas_path, 128, state->menu.atlas_path_edit);
+
+    if (GuiButton(atlas_scan, "Scan")) {
+      if (state->menu.atlases.paths != NULL) {
+        UnloadDirectoryFiles(state->menu.atlases);
+      }
+      state->menu.atlases = LoadDirectoryFilesEx(state->menu.atlas_path, ".atlas", true);
+      printf("Found %d atlases in %s\n", state->menu.atlases.count, state->menu.atlas_path);
+    }
+
+    if (GuiButton(atlas_default, "Default")) {
+      strncpy(state->menu.atlas_path, DEFAULT_ATLAS_PATH, sizeof(state->menu.atlas_path));
+    }
+
+    // Draw last in atlas panel
+    state->menu.atlas_dd_edit ^= GuiDropdownBox(atlas_dropdown, state->menu.atlas_dd_entries.data, 
+          &state->menu.atlas_dd_active, state->menu.atlas_dd_edit);
 
     bool close_menu = IsKeyPressed(KEY_ESCAPE) || GuiButton(
             (Rectangle){
@@ -168,5 +242,9 @@ void unload_ui(UIState *state) {
   if (state->menu.levels.paths != NULL) {
     UnloadDirectoryFiles(state->menu.levels);
   }
+  if (state->menu.atlases.paths != NULL) {
+    UnloadDirectoryFiles(state->menu.atlases);
+  }
   free(state->menu.lvl_dd_entries.data);
+  free(state->menu.atlas_dd_entries.data);
 }

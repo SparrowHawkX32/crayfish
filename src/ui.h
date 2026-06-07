@@ -6,6 +6,7 @@
 
 #define PADDING 5
 #define DEFAULT_LEVEL_PATH "../levels"
+#define DEFAULT_ATLAS_PATH "../textures"
 
 typedef struct {
   enum {
@@ -20,6 +21,12 @@ typedef struct {
     char lvl_path[128];
     int lvl_path_edit;
     FilePathList levels;
+    String atlas_dd_entries;
+    int atlas_dd_active;
+    int atlas_dd_edit;
+    char atlas_path[128];
+    int atlas_path_edit;
+    FilePathList atlases;
   } menu;
 } UIState;
 
