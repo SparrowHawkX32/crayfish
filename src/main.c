@@ -25,14 +25,14 @@ int main (void) {
     BeginDrawing();
     ClearBackground(BLACK);
 
-    draw_scene(&ctx);
+    if (ui_state.page != EDITOR) draw_scene(&ctx);
     draw_ui(&ui_state, &ctx);
 
     EndDrawing();
   }
   
   // Unload resources
-  UnloadImageColors(ctx.atlasColors);
+  UnloadImageColors(ctx.atlas_colors);
   UnloadImage(ctx.atlas);
 
   unload_ui(&ui_state);

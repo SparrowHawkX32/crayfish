@@ -21,7 +21,7 @@ void init_render_ctx(RenderContext* ctx) {
     sprintf((char*)&num, "%d", i + 1);
     ImageDrawText(&ctx->atlas, (const char*)&num, 16 * i, 0, 10, BLACK);
   }
-  ctx->atlasColors = LoadImageColors(ctx->atlas);
+  ctx->atlas_colors = LoadImageColors(ctx->atlas);
 }
 
 
@@ -64,10 +64,10 @@ void change_atlas(RenderContext* ctx, const char* path) {
       Image new_atlas = LoadImage(path);
 
       if (new_atlas.data != NULL) {
-        UnloadImageColors(ctx->atlasColors);
+        UnloadImageColors(ctx->atlas_colors);
         UnloadImage(ctx->atlas);
         ctx->atlas = new_atlas;
-        ctx->atlasColors = LoadImageColors(new_atlas);
+        ctx->atlas_colors = LoadImageColors(new_atlas);
       }
       else UnloadImage(new_atlas);
 }
@@ -159,7 +159,7 @@ void cast_ray(const RenderContext *ctx, float h_offset, CastResult *result) {
         (hit_side == 1 && prev_dist_y >= ctx->render_dist)) break;
 
     // Check if a hit has occurred
-    size_t map_offset = Wrap(grid_y, 0, ctx->level->height) * ctx->level->width + Wrap(grid_x, 1, ctx->level->width);
+    size_t map_offset = Wrap(grid_y, 0, ctx->level->height) * ctx->level->width + Wrap(grid_x, 0, ctx->level->width);
     result->atlas_idx = ctx->level->map[map_offset];
     if (result->atlas_idx != 0) result->hit = true;
 
@@ -222,7 +222,7 @@ void render_scene(const RenderContext* ctx) {
       if (result.atlas_idx > num_textures) result.atlas_idx = 1;
 
       int atlas_x = ((float)result.atlas_idx - 1 + result.wall_pos) * ctx->atlas.height;
-      Color pixel_color = ctx->atlasColors[atlas_y * ctx->atlas.width + atlas_x];
+      Color pixel_color = ctx->atlas_colors[atlas_y * ctx->atlas.width + atlas_x];
       pixel_color = ColorLerp(pixel_color, ctx->level->air_color, result.distance / ctx->render_dist);
 
       DrawPixel(col, ctx->render_size.y - 1 - pixel_y, pixel_color);

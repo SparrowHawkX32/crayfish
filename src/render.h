@@ -23,7 +23,7 @@ typedef struct {
   float fov;
   Vector2 render_size;
   Image atlas;
-  Color* atlasColors;
+  Color* atlas_colors;
   RenderTexture bg;
   RenderTexture target;
 } RenderContext;
