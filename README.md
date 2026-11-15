@@ -9,5 +9,5 @@ Crayfish is a barebones raycasting renderer that turns 2D maps into explorable 3
 
 ## Build instructions
 `mkdir build && cd build`\
-`cmake ..`\
+`cmake -DCMAKE_BUILD_TYPE=Release ..`\
 `make`
