@@ -43,12 +43,12 @@ void string_append_bytes(String *string, void *data, size_t bytes) {
   while (string->capacity - string->length <= bytes) {
     _string_resize(string);
   }
-  memcpy(string->data + string->length - 1, data, bytes);
+  memcpy(string->data + string->length - (string->length > 1 ? 2 : 1), data, bytes);
   string->length += bytes + 1;
 }
 
 
 void string_zero(String *string) {
   memset(string->data, 0, string->length);
-  string->length = 0;
+  return 1;
 }
