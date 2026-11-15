@@ -26,9 +26,8 @@ Level* load_level_file(const char* path);
 
 void save_level_file(Level* level, const char* path);
 
+void resize_level(Level* level, unsigned int width, unsigned int height);
+
 void unload_level(Level* level);
-
-void scan_levels(const char* user_path);
-
 
 #endif

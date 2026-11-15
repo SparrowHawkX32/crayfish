@@ -21,7 +21,8 @@ typedef struct {
   Vector2 cam_right;
   float render_dist;
   float fov;
-  Vector2 render_size;
+  unsigned int render_width;
+  unsigned int render_height;
   Image atlas;
   Color* atlas_colors;
   RenderTexture bg;
@@ -40,9 +41,13 @@ void init_render_ctx(RenderContext* ctx);
 
 void unload_render_ctx(RenderContext* ctx);
 
+void generate_bg(RenderContext* ctx);
+
 void change_level(RenderContext* ctx, Level* level);
 
 void change_atlas(RenderContext* ctx, const char* path);
+
+void load_placeholder_atlas(RenderContext* ctx);
 
 void process_input(RenderContext* ctx);
 

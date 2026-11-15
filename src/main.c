@@ -15,7 +15,8 @@ int main (void) {
   RenderContext ctx = {0};
   init_render_ctx(&ctx);
   UIState ui_state = {0};
-  init_ui(&ui_state);
+  init_ui(&ui_state, &ctx);
+  ui_state.page = HUD;
 
   // Main loop
   while (!WindowShouldClose()) {

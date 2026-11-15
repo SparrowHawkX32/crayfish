@@ -1,4 +1,7 @@
 #include "util.h"
+#include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,5 +53,59 @@ void string_append_bytes(String *string, void *data, size_t bytes) {
 
 void string_zero(String *string) {
   memset(string->data, 0, string->length);
+  string->length = 1;
+}
+
+int verify_filename(char* text, char* out, bool allow_empty) {
+  bool valid = true;
+  char c;
+  for (int i = 0; valid && (c = text[i]) != '\0'; i++) {
+    if (!isalnum(c) && !strchr("_-", c)) valid = false;
+  }
+  if ((!allow_empty && text[0] == '\0') || !valid) {
+    strcpy(text, out);
+    return 0;
+  }
+  strcpy(out, text);
+  return 1;
+}
+
+int parse_uint(char* text, unsigned int* out, unsigned int min, unsigned int max, unsigned int fallback) {
+  errno = 0;
+  char* endptr = 0;
+  long val = strtol(text, &endptr, 10);
+  if (errno == ERANGE || (val == 0 && text == endptr) || val < min || val > max) {
+    snprintf(text, 10, "%d", fallback);
+    return 0;
+  }
+  *out = val;
+  snprintf(text, 10, "%d", *out);
+  return 1;
+}
+
+
+int parse_float(char* text, float* out, float min, float max, float fallback) {
+  errno = 0;
+  char* endptr = 0;
+  double val = strtod(text, &endptr);
+  if (errno == ERANGE || (val == 0 && text == endptr) || val < min || val > max) {
+    snprintf(text, 10, "%.2f", fallback);
+    return 0;
+  }
+  *out = val;
+  snprintf(text, 10, "%.2f", *out);
+  return 1;
+}
+
+int parse_color(char* text, Color* out, Color fallback) {
+  errno = 0;
+  char* endptr = 0;
+  long val = strtol(text, &endptr, 16);
+  if (errno == ERANGE || val < 0 || val > UINT_MAX || (val == 0 && text == endptr)) {
+    snprintf(text, 10, "%08X", ColorToInt(fallback));
+    return 0;
+  }
+  *out = GetColor(val);
+  snprintf(text, 10, "%08X", ColorToInt(*out));
   return 1;
 }

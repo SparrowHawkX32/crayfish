@@ -9,6 +9,7 @@
 
 void serialise_level(Level* level, String* buf) {
   unsigned char* map_pointer = level->map;
+
   level->map = 0;
   string_append_bytes(buf, level, sizeof(Level));
   level->map = map_pointer;
@@ -52,7 +53,6 @@ Level* load_level_file(const char* path) {
     printf("ERROR: incorrect level file!\n");
     return NULL;
   }
-
 
   FILE* level_file = fopen(path, "r");
   if (level_file == NULL) {
@@ -109,8 +109,24 @@ void save_level_file(Level* level, const char* dir) {
 }
 
 
+void resize_level(Level* level, unsigned int width, unsigned int height) {
+  unsigned char* new_map = malloc(width * height);
+  memset(new_map, 0, width * height);
+
+  for (int row = 0; row < (height < level->height ? height : level->height); row++) {
+    memcpy(new_map + row * width, level->map + row * level->width, width < level->width ? width : level->width);
+  }
+
+  level->width = width;
+  level->height = height;
+  free(level->map);
+  level->map = new_map;
+}
+
+
 void unload_level(Level* level) {
   if (level == NULL) return;
   free(level->map);
   free(level);
 }
+
